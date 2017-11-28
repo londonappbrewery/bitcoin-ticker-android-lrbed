@@ -12,16 +12,20 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Toast;
 
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import cz.msebera.android.httpclient.Header;
 
 
 public class MainActivity extends AppCompatActivity {
 
     // Constants:
     // TODO: Create the base URL
-    private final String BASE_URL = "https://apiv2.bitcoin ...";
+    private final String BASE_URL = "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTC";
 
     // Member Variables:
     TextView mPriceTextView;
@@ -45,6 +49,21 @@ public class MainActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
         // TODO: Set an OnItemSelected listener on the spinner
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.d("Bitcoin", ""+parent.getItemAtPosition(position));
+                String url = BASE_URL + parent.getItemAtPosition(position).toString();
+                Log.d("Bitcoin", "sending request to " + url);
+                letsDoSomeNetworking(url);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Log.d("Bitcoin", "nothing is selected!");
+
+            }
+        });
 
     }
 
@@ -71,7 +90,21 @@ public class MainActivity extends AppCompatActivity {
 //                Toast.makeText(WeatherController.this, "Request Failed", Toast.LENGTH_SHORT).show();
 //            }
 //        });
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get(url, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response){
+                Log.d("Bitcoin", "Request Succeeded! JSON: " + response.toString());
+                DataModel dataModel = DataModel.fromJson(response);
+                mPriceTextView.setText(dataModel.getAskPrice());
+            }
 
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable e, JSONObject response){
+                Log.d("Bitcoin", "Request Failed! Status code: " + statusCode);
+                Log.e("Bitcoin", e.toString());
+            }
+        });
 
     }
 
